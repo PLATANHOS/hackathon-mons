@@ -2,6 +2,10 @@
 
 UniRewards es una aplicación web educativa que conecta estudiantes y profesores mediante un contrato inteligente en Monad Testnet. Los estudiantes pueden unirse a clases, entregar actividades, acumular puntos, mantener rachas y canjear recompensas simuladas. Los profesores pueden crear clases, publicar actividades y calificar entregas.
 
+## URL Proyecto
+
+- https://hackathon-mons.vercel.app/
+
 ## Contrato en Monad Testnet
 
 - **Red:** Monad Testnet
