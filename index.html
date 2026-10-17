@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UniRewards</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<style>
+:root{--bg:#f5f4fb;--ink:#1e1b4b;--mut:#64607f;--line:#e2dff0;--acc:#4f46e5;--teal:#0d9488;--coin:#f5a524}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 Manrope,system-ui,sans-serif;background:radial-gradient(circle at 92% -4%,#c8f1ea 0,transparent 360px),radial-gradient(circle at 4% 0,#ddd8ff 0,transparent 400px),var(--bg);color:var(--ink);min-height:100vh}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 24px;background:linear-gradient(100deg,#312e81,#0f766e);color:#fff}
+header b{font-size:18px;margin-right:auto}
+header .ghost{color:#fff;border-color:#ffffff55}
+.coin{background:var(--coin);color:#3a2a00;font-weight:800;padding:6px 14px;border-radius:99px}
+main{max-width:1040px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border:1px solid var(--line);border-top:4px solid var(--acc);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #4f46e514}
+.auth{max-width:460px;margin:40px auto;border-top-color:var(--coin)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:24px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.row>span{flex:1}.row input{flex:1;width:auto}.row select{width:auto}
+input,select,textarea{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;width:100%;margin:4px 0;background:#fff}
+button{font:inherit;font-weight:600;padding:9px 14px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.del{background:transparent;color:#c2255c;border:1px solid #c2255c55}
+.accrow{display:flex;gap:6px;width:100%}.accrow>button:first-child{flex:1;text-align:left}
+.pk.on{background:var(--acc);color:#fff;border-color:var(--acc)}.pk.s.on{background:var(--teal);border-color:var(--teal)}
+.ai{background:var(--coin);color:#3a2a00}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--coin)}
+small{color:var(--mut);font-weight:400}
+h1,h2,h3{margin:.4em 0}
+.err{color:#c2255c;margin:6px 0;min-height:1em}.ok{color:var(--teal);margin:6px 0}
+.menu{position:relative}
+.avatar{width:38px;height:38px;border-radius:50%;padding:0;background:linear-gradient(135deg,var(--coin),#ec4899);color:#fff;font-weight:800}
+#dd{display:none;position:absolute;right:0;top:46px;background:#fff;border:1px solid var(--line);border-radius:10px;min-width:210px;padding:6px;z-index:5;box-shadow:0 8px 24px #1e1b4b26}
+#dd.show{display:block}
+#dd button{display:block;width:100%;text-align:left;background:none;color:var(--ink)}
+#dd button:hover{background:var(--bg)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;z-index:9}
+#toast:empty{display:none}
+#ai{position:fixed;top:0;right:0;height:100%;width:min(380px,100%);background:#fff;border-left:1px solid var(--line);padding:18px;transform:translateX(100%);transition:transform .25s;overflow:auto;z-index:8}
+#ai.open{transform:none}
+dialog{border:1px solid var(--line);border-radius:12px;width:min(520px,94vw);padding:18px;color:var(--ink)}dialog::backdrop{background:#1e1b4b66}
+.msg{background:var(--bg);border-radius:8px;padding:8px 10px;margin:6px 0;overflow-wrap:anywhere}.msg.me{background:#e0e7ff}label{display:block;margin:8px 0}
+#out{white-space:pre-wrap;background:var(--bg);border-radius:8px;padding:12px;min-height:120px;margin-top:10px}
+.logo{display:flex;align-items:center;gap:8px;margin-right:auto}.logo b{margin:0;font-size:19px}.logo i{font-style:normal;background:#ffffff26;border-radius:10px;padding:2px 8px}
+header .ghost.on{background:#ffffff2e}
+.hero{position:relative;overflow:hidden;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#4f46e5,#0d9488);color:#fff;border-radius:18px;padding:26px;margin-bottom:18px}
+.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;background:#ffffff1c}.hero:before{width:240px;height:240px;right:-70px;top:-100px}.hero:after{width:150px;height:150px;right:170px;bottom:-90px}
+.hero h1{margin:0;font-size:26px}.hero p{margin:4px 0 0;opacity:.92}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;position:relative;z-index:1;flex:1;min-width:260px}
+.stat{background:#ffffff26;border-radius:12px;padding:10px 12px}.stat b{display:block;font-size:22px}.stat small{color:#ffffffe0}
+.bar{height:10px;background:#e8e6f5;border-radius:99px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--coin));border-radius:99px}
+.chip{display:inline-block;background:#eef2ff;color:var(--acc);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}.chip.g{background:#dcfce7;color:#15803d}.chip.y{background:#fef3c7;color:#b45309}
+.cls,.rw,.ac{transition:transform .15s,box-shadow .15s}.cls:hover,.rw:hover,.ac:hover{transform:translateY(-3px);box-shadow:0 10px 24px #4f46e529}
+.ic{width:46px;height:46px;border-radius:14px;background:var(--c,var(--acc));color:#fff;display:grid;place-items:center;font-size:22px;font-weight:800;margin-bottom:8px}
+.rw .big{font-size:44px}.rw button:disabled{cursor:not-allowed}
+.ac:not(.ok){background:#fcfcff}.ac.ok{border-top-color:var(--coin);background:linear-gradient(180deg,#fff7e0,#fff)}
+.empty{text-align:center;padding:30px 16px;color:var(--mut)}.empty .big{font-size:46px}
+.aw{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;max-width:1000px;margin-top:48px}.aw .auth{margin:0;max-width:none}
+.ah{position:relative;overflow:hidden;background:linear-gradient(135deg,#312e81,#0f766e);color:#fff;border-radius:20px;padding:34px}
+.ah:after{content:"🪙";position:absolute;right:-10px;bottom:-30px;font-size:130px;opacity:.15}.ah h1{font-size:34px;line-height:1.15;margin:0 0 10px}.ah ul{padding:0;margin:18px 0 0}.ah li{list-style:none;margin:10px 0}
+#win{border:0;border-radius:20px;text-align:center;width:min(420px,92vw);padding:26px;box-shadow:0 20px 60px #1e1b4b55}#win::backdrop{background:#1e1b4b88}
+.gain{display:flex;justify-content:space-between;gap:10px;background:var(--bg);border-radius:10px;padding:8px 12px;margin:6px 0;text-align:left}.gain.a{background:#fef3c7}
+@media(max-width:760px){.aw{grid-template-columns:1fr;margin-top:16px}}
+@media(prefers-reduced-motion:reduce){#ai{transition:none}.cls,.rw,.ac{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"><main><small>Cargando…</small></main></div>
+<div id="toast"></div>
+<dialog id="dlg"></dialog>
+<dialog id="win"></dialog>
+<aside id="ai" aria-label="Asistente IA">
+  <div class="row"><b style="flex:1">Asistente IA</b><button class="ghost" onclick="aiToggle()">Cerrar</button></div>
+  <small id="cnt"></small>
+  <textarea id="topic" rows="3" placeholder="¿Sobre qué tema quieres practicar?"></textarea>
+  <div class="row"><input id="af" type="file" multiple hidden accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.py,.java,.c,.cpp,.html,.css,.sql"><button class="ghost" onclick="$('#af').click()">📎 Adjuntar archivos</button></div>
+  <div id="files" class="row"></div>
+  <div class="row"><button onclick="ai('ex')">Pedir ejercicio</button><button onclick="ai('quiz')">Quiz del día</button></div>
+  <div id="out"></div>
+</aside>
+
+<script>
+/* ===== CONFIGURACIÓN ===== */
+const CONTRACT = "0xC4EdfFa3b5872121E9B38Cc536965fDE78B446DA"; // dirección del contrato NUEVO desplegado en Remix
+const RPC_URL = "https://rpc.ankr.com/monad_testnet"; // Monad Testnet (chain ID 10143). Alternativa: "https://rpc.ankr.com/monad_testnet". Original: "https://testnet-rpc.monad.xyz"
+// Billetera SOLO DE PRUEBAS con MON de prueba (faucet.monad.xyz). Paga el gas de las cuentas nuevas. Nunca uses una clave con dinero real.
+const FUNDER_KEY = "0x10b1874475cf1f9926546356cb2038f94a434dc65f355801d5081aa9bc5f3b98";
+const FUND_AMOUNT = "0.2"; // MON que recibe cada cuenta nueva (el gas se paga en MON)
+const MIN_BAL = "0.08"; // si el saldo baja de esto, se recarga (al iniciar sesión y tras cada transacción)
+// Opcional: JWT de pinata.cloud (solo permiso pinFileToIPFS) para subir archivos a IPFS. Vacío = se pegan enlaces en vez de subir archivos.
+const PINATA_JWT = "";
+const AI_ENDPOINT = ""; // ej: "https://tu-servidor.com/api/ai" (vacío = modo demo). Recibe {prompt, files:[{name,type,text|data(base64)}]} y debe devolver {text}
+
+const ABI = [
+ "function users(address) view returns (uint8 role,string username,string email,uint256 points)",
+ "function courseCount() view returns (uint256)",
+ "function courses(uint256) view returns (address teacher,string name)",
+ "function activityCount() view returns (uint256)",
+ "function activities(uint256) view returns (uint256 courseId,string title,string kind,uint256 points,uint256 deadline,string file)",
+ "function rewardCount() view returns (uint256)",
+ "function rewards(uint256) view returns (string name,uint256 cost)",
+ "function enrolled(uint256,address) view returns (bool)",
+ "function submissions(uint256,address) view returns (bool done,bool graded,uint8 grade,string content,string file)",
+ "function getStudents(uint256) view returns (address[])",
+ "function todayStats(address) view returns (uint8,uint8)",
+ "function register(uint8,string,string)","function createCourse(string)","function joinCourse(uint256)",
+ "function createActivity(uint256,string,string,uint256,uint256,string)","function editActivity(uint256,string,uint256,string)","function submit(uint256,string,string)","function editSubmission(uint256,string,string)","function postMessage(uint256,address,string)","function getMessages(uint256,address) view returns (tuple(address sender,uint256 time,string text)[])",
+ "function grade(uint256,address,uint8)","function aiExercise()","function aiQuiz()","function redeem(uint256)","function deleteAccount()",
+ "function redeemed(uint256,address) view returns (bool)","function achCount() view returns (uint256)",
+ "function achievements(uint256) view returns (string name,string desc,uint8 role,uint8 metric,uint256 target,uint256 bonus)",
+ "function getCounters(address) view returns (uint256[9])","function unlockedMask(address) view returns (uint256)","function currentStreak(address) view returns (uint256)",
+ "event PointsEarned(address indexed user,uint256 amount,string reason)"
+];
+
+const $ = s => document.querySelector(s), app = $('#app'), LS = localStorage;
+const COL = ['#4f46e5','#0d9488','#f59e0b','#ec4899','#0ea5e9'];
+const K_ACC = 'ur_accounts_' + CONTRACT.slice(2, 10), K_SES = 'ur_session_' + CONTRACT.slice(2, 10); // cada contrato nuevo empieza sin cuentas viejas
+const KI = {Tarea:'📝', Taller:'🧪', Ejercicio:'💡'}, MI = ['📤','🤖','🧠','✅','🏫','📌','🔥','🎁','⭐'], RI = ['🎮','🛍️','☕','🎧','🎬','🎁'];
+const ri = i => RI[Number(i) % RI.length], fm = n => BigInt(n).toLocaleString('es-CO');
+let REW, ACH;
+const rews = async () => REW || (REW = await all('rewardCount', 'rewards'));
+const achs = async () => ACH || (ACH = await all('achCount', 'achievements'));
+const esc = s => String(s).replace(/[&<>"']/g, m => '&#' + m.charCodeAt(0) + ';');
+const provider = new ethers.JsonRpcProvider(RPC_URL, 10143, {staticNetwork: ethers.Network.from(10143), batchMaxCount: 5});const accs = () => JSON.parse(LS.getItem(K_ACC) || '[]');
+const wal = pk => new ethers.Contract(CONTRACT, ABI, new ethers.Wallet(pk, provider));
+let c, addr, me, role = 0, view = {tab:'home', course:null};
+const toast = m => $('#toast').textContent = m;
+const st = (m, bad) => { $('#err').textContent = m; $('#err').className = bad ? 'err' : 'ok'; };
+
+const all = async (n, g) => Promise.all([...Array(Number(await c[n]())).keys()]
+  .map(async i => ({id:i, ...(await c[g](i)).toObject()})));
+async function tx(p, title){
+  toast('Enviando… puede tardar unos segundos');
+  try{
+    const rc = await (await p).wait(); toast(''); topUp();
+    const gains = [];
+    for(const l of rc.logs){ try{ const e = c.interface.parseLog(l); if(e && e.name == 'PointsEarned' && e.args[0].toLowerCase() == addr.toLowerCase()) gains.push({n:e.args[1], r:e.args[2]}); }catch{} }
+    await load(); celebrate(title, gains); return true;
+  }catch(e){ toast(''); alert(e.reason||e.shortMessage||e.message); return false; }
+}
+function celebrate(title, gains){
+  if(!title && !gains.length){ toast('Listo ✓'); return setTimeout(() => toast(''), 1500); }
+  const tot = gains.reduce((a, g) => a + g.n, 0n);
+  const name = g => g.r.startsWith('Logro') ? '🏆 ' + esc(g.r) : g.r == 'Racha IA' ? `🔥 Racha de ${g.n / 20n >= 10n ? '10+' : g.n / 20n} días` : esc(g.r);
+  $('#win').innerHTML = `<div style="font-size:56px">${title ? '🎉' : '🪙'}</div><h2>${title || '¡Ganaste puntos!'}</h2>` +
+    gains.map(g => `<div class="gain${g.r.startsWith('Logro') ? ' a' : ''}"><span>${name(g)}</span><b>+${fm(g.n)}</b></div>`).join('') +
+    (gains.length > 1 ? `<p><b>Total: +${fm(tot)} pts</b></p>` : '') + `<button onclick="$('#win').close()">¡Genial!</button>`;
+  $('#win').showModal();
+}
+
+/* ===== Billetera integrada: se crea sola al registrarse, sin MetaMask ===== */
+async function fund(a){
+  if(!FUNDER_KEY) return;
+  const f = new ethers.Wallet(FUNDER_KEY, provider);
+  await (await f.sendTransaction({to:a, value:ethers.parseEther(FUND_AMOUNT)})).wait();
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// El RPC reparte las consultas entre varios nodos: tras fondear, esperamos a que el saldo sea visible.
+async function waitBal(a, tries = 20){
+  for(let i = 0; i < tries; i++){
+    try{ if(await provider.getBalance(a) >= ethers.parseEther(MIN_BAL)) return true; }catch{}
+    await sleep(1500);
+  }
+  return false;
+}
+// Reintenta si un nodo atrasado todavía no ve el saldo recién enviado.
+async function retry(fn, tries = 6){
+  for(let i = 0; ; i++){
+    try{ return await fn(); }
+    catch(e){
+      if(i >= tries - 1 || !/insufficient balance/i.test((e.shortMessage||'') + (e.message||''))) throw e;
+      await sleep(2500);
+    }
+  }
+}
+const topUp = async () => { try{ if(await provider.getBalance(addr) < ethers.parseEther(MIN_BAL)) await fund(addr); }catch{} };
+async function start(a){
+  addr = a.addr; c = wal(a.pk); LS.setItem(K_SES, addr);
+  try{ if(await provider.getBalance(addr) < ethers.parseEther(MIN_BAL)){ await fund(addr); await waitBal(addr); } }catch{}
+  view = {tab:'home', course:null}; await load();
+}
+const enter = async ad => { try{ await start(accs().find(a => a.addr == ad)); }catch(e){ alert(e.shortMessage||e.message); } };
+
+let pend = null; // billetera pendiente de registro (reintentos)
+async function signup(){
+  const u = $('#un').value.trim(), e = $('#em').value.trim();
+  if(!role) return st('Elige si eres profesor o estudiante', 1);
+  if(!u) return st('Escribe un nombre de usuario', 1);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return st('Escribe un correo válido, por ejemplo nombre@correo.com', 1);
+  if(accs().some(x => x.email.toLowerCase() == e.toLowerCase())) return st('Ese correo ya tiene cuenta. Pulsa «Ya tengo cuenta» para entrar.', 1);
+  $('#go').disabled = true;
+  try{
+    st('Creando tu billetera…');
+    // Si un intento anterior falló, se reutiliza la misma billetera (ya fondeada) en vez de crear otra.
+    let a = pend && pend.email.toLowerCase() == e.toLowerCase() ? {...pend, username:u, role} : null;
+    if(!a){ const w = ethers.Wallet.createRandom(); a = {addr:w.address, pk:w.privateKey, username:u, email:e, role}; }
+    pend = a;
+    let funded = false;
+    try{ funded = await provider.getBalance(a.addr) >= ethers.parseEther(MIN_BAL); }catch{}
+    if(!funded) await fund(a.addr);
+    st('Esperando confirmación del saldo…');
+    if(!await waitBal(a.addr)) throw new Error(FUNDER_KEY ? 'La red aún no confirma el saldo de tu billetera. Espera unos segundos y pulsa «Crear cuenta» otra vez.' : 'Falta configurar FUNDER_KEY en index.html para pagar el gas de cuentas nuevas');
+    st('Registrando tu cuenta…');
+    await retry(async () => (await wal(a.pk).register(role, u, e)).wait());
+    pend = null;
+    LS.setItem(K_ACC, JSON.stringify([...accs(), a]));
+    await start(a);
+  }catch(x){
+    const m = x.reason||x.shortMessage||x.message;
+    st(/insufficient balance/i.test(m) ? 'La red aún no refleja el saldo de tu billetera. Pulsa «Crear cuenta» otra vez en unos segundos.' : m, 1);
+    $('#go').disabled = false;
+  }
+}
+function logout(){ LS.removeItem(K_SES); aiReset(); $('#ai').classList.remove('open'); auth(); }
+
+async function load(){
+  try{
+    me = await c.users(addr); if(!Number(me.role)) return logout();
+    if(view.tab == 'profile') return app.innerHTML = head() + `<main>${profile()}</main>`;
+    if(view.tab == 'shop') return app.innerHTML = head() + `<main>${await shop()}</main>`;
+    if(view.tab == 'ach') return app.innerHTML = head() + `<main>${await achPage()}</main>`;
+    await (Number(me.role) == 1 ? student() : teacher());
+  }catch(e){
+    app.innerHTML = `<main><section class="card"><b>No pudimos leer los datos de la red</b><p class="err">${esc(e.shortMessage || e.message)}</p><div class="row"><button onclick="load()">Reintentar</button><button class="ghost" onclick="logout()">Cerrar sesión</button></div></section></main>`;
+  }
+}
+const go = (tab, course=null) => { view = {tab, course}; load(); };
+const pick = r => { role = r; document.querySelectorAll('.pk').forEach(b => b.classList.toggle('on', b.dataset.r == r)); };
+document.addEventListener('click', e => { if(!e.target.closest('.menu')) $('#dd')?.classList.remove('show'); });
+
+const nav = (t, l) => `<button class="ghost${view.tab == t && view.course == null ? ' on' : ''}" onclick="go('${t}')">${l}</button>`;
+const head = () => `<header><span class="logo"><i>🎓</i><b>UniRewards</b></span>${nav('home','Inicio')}${nav('ach','🏆 Logros')}${nav('shop','🎁 Recompensas')}<button class="ai" onclick="aiToggle()">✨ Asistente IA</button>
+  <span class="coin">🪙 ${fm(me.points)} pts</span>
+  <div class="menu"><button class="avatar" aria-label="Perfil" onclick="$('#dd').classList.toggle('show')">${esc(me.username[0].toUpperCase())}</button>
+  <div id="dd"><button onclick="go('profile')">Información del perfil</button><button onclick="logout()">Cerrar sesión</button></div></div></header>`;
+const profile = () => `<section class="card"><h2>Mi perfil</h2><p><b>Usuario:</b> ${esc(me.username)}</p><p><b>Correo:</b> ${esc(me.email)}</p>
+  <p><b>Rol:</b> ${Number(me.role) == 2 ? 'Profesor' : 'Estudiante'}</p><p><b>Billetera:</b> <small>${addr}</small></p><button class="ghost" onclick="go('home')">Volver</button></section>`;
+
+let mode = 'new';
+const setMode = m => { mode = m; auth(); };
+function auth(){
+  const as = accs(), n = mode == 'new';
+  app.innerHTML = `<main class="aw"><section class="ah"><h1>Estudia, entrega<br>y gana recompensas</h1><p>La plataforma de clases donde cada esfuerzo suma puntos.</p><ul><li>📚 Únete a tus clases y entrega actividades</li><li>🔥 Mantén tu racha con el asistente de IA</li><li>🏆 Desbloquea logros y gana puntos extra</li><li>🎁 Canjea tus puntos por premios</li></ul></section><section class="card auth"><h2>Bienvenido 👋</h2><p>Crea tu cuenta o inicia sesión.</p>
+  ${n ? `<p><b>¿Eres profesor o estudiante?</b></p>
+  <div class="row"><button class="ghost pk" data-r="2" onclick="pick(2)">Profesor</button><button class="ghost pk s" data-r="1" onclick="pick(1)">Estudiante</button></div>
+  <input id="un" placeholder="Nombre de usuario">` : `<p><b>Inicia sesión con tu correo</b></p>`}
+  <input id="em" type="email" placeholder="Correo (nombre@correo.com)">
+  ${n ? '<small>Te creamos una billetera automáticamente. No necesitas instalar nada.</small>' : ''}
+  <p id="err" class="err"></p>
+  <div class="row"><button id="go" onclick="${n ? 'signup()' : 'login()'}">${n ? 'Crear cuenta' : 'Iniciar sesión'}</button>
+  <button class="ghost" onclick="setMode('${n ? 'in' : 'new'}')">${n ? 'Ya tengo cuenta' : 'Crear una cuenta nueva'}</button></div>
+  ${!n && as.length ? `<h3>Cuentas en este dispositivo</h3><div class="row">${as.map(a => `<div class="accrow"><button class="ghost" onclick="enter('${a.addr}')">${esc(a.username)} <small>${esc(a.email)}</small></button><button class="del" aria-label="Borrar cuenta de ${esc(a.username)}" title="Borrar cuenta" onclick="delAcc('${a.addr}')">🗑</button></div>`).join('')}</div>` : ''}
+  </section></main>`;
+  if(n) pick(role);
+}
+let deleting = false;
+async function delAcc(ad){
+  if(deleting) return;
+  const a = accs().find(x => x.addr == ad); if(!a) return;
+  if(!confirm(`¿Borrar la cuenta de ${a.username} (${a.email})?\n\nSe dará de baja en la red${a.role == 2 ? ' (sus clases dejarán de aparecerle a los estudiantes)' : ''} y se borrará su billetera y su clave privada de este dispositivo. No podrás recuperar el acceso ni los puntos.`)) return;
+  deleting = true; toast('Borrando cuenta… puede tardar unos segundos');
+  try{
+    // Si la cuenta aún existe en la red, se da de baja allí antes de perder la clave.
+    const reg = Number((await new ethers.Contract(CONTRACT, ABI, provider).users(a.addr)).role);
+    if(reg){
+      if(await provider.getBalance(a.addr) < ethers.parseEther(MIN_BAL)){ await fund(a.addr); await waitBal(a.addr); }
+      await retry(async () => (await wal(a.pk).deleteAccount()).wait());
+    }
+    LS.setItem(K_ACC, JSON.stringify(accs().filter(x => x.addr != ad)));
+    if(LS.getItem(K_SES) == ad) LS.removeItem(K_SES);
+    toast('Cuenta y billetera borradas'); setTimeout(() => toast(''), 2500);
+    auth();
+  }catch(e){
+    toast(''); alert('No se pudo borrar la cuenta en la red, así que no se borró nada. Intenta de nuevo.\n\n' + (e.reason||e.shortMessage||e.message));
+  }finally{ deleting = false; }
+}
+async function login(){
+  const e = $('#em').value.trim().toLowerCase();
+  if(!e) return st('Escribe el correo con el que te registraste', 1);
+  const a = accs().find(a => a.email.toLowerCase() == e);
+  if(!a) return st('No encontramos una cuenta con ese correo en este dispositivo. Si eres nuevo, pulsa «Crear una cuenta nueva».', 1);
+  $('#go').disabled = true;
+  try{ await start(a); }catch(x){ st(x.shortMessage || x.message, 1); $('#go').disabled = false; }
+}
+
+async function student(){
+  let h = ''; const {tab, course} = view;
+  if(course != null){
+    const k = await c.courses(course);
+    h += `<button class="ghost" onclick="go('home')">Volver</button><h2>${esc(k.name)}</h2>`;
+    for(const a of (await all('activityCount','activities')).filter(a => a.courseId == course)){
+      const s = await c.submissions(a.id, addr), over = late(a.deadline);
+      h += `<div class="card" style="border-top-color:${COL[a.id%5]}"><div class="row"><span><b>${KI[a.kind] || '📝'} ${esc(a.title)}</b><br><small>${esc(a.kind)} · hasta ${a.points} pts · ${Number(a.deadline) ? 'Límite: ' + fmt(a.deadline) + (over ? ' (vencida)' : '') : 'Sin fecha límite'}</small></span>${
+        s.done ? `<small>Entregada${s.graded ? ` · nota ${s.grade}/100 · +${Math.floor(Number(a.points) * Number(s.grade) / 100)} pts` : ' · pendiente de calificar'}</small>` : over ? '<small>Plazo vencido</small>' : `<button onclick="send(${a.id})">Entregar</button>`}</div>
+        ${fileLink(a.file) ? `<p><small>Guía:</small> ${fileLink(a.file)}</p>` : ''}
+        ${s.done ? `<div class="msg"><small>Tu entrega:</small><br>${esc(s.content)} ${fileLink(s.file)}</div>` : ''}
+        <div class="row">${s.done && !s.graded && !over ? `<button class="ghost" onclick="send(${a.id},1)">Editar entrega</button>` : ''}<button class="ghost" onclick="thread(${a.id},'${addr}')">Mensajes</button></div></div>`;
+    }
+  } else {
+    const ks = [], alive = {}, nm = {}; h += await hero();
+    for(const k of await all('courseCount','courses')){
+      // Si la cuenta del profesor fue borrada, su clase ya no se muestra.
+      if(!(k.teacher in alive)){ const u = await c.users(k.teacher); alive[k.teacher] = Number(u.role) == 2; nm[k.teacher] = u.username; }
+      if(alive[k.teacher]) ks.push({...k, inn: await c.enrolled(k.id, addr), t: nm[k.teacher]});
+    }
+    const cd = k => `<div class="card cls" style="--c:${COL[k.id%5]};border-top-color:${COL[k.id%5]}"><div class="ic">${esc(k.name[0].toUpperCase())}</div><b>${esc(k.name)}</b><br><small>Prof. ${esc(k.t)}</small><p>${k.inn ? `<button onclick="go('home',${k.id})">Abrir clase</button>` : `<button class="ghost" onclick="tx(c.joinCourse(${k.id}))">Unirme</button>`}</p></div>`;
+    const mine = ks.filter(k => k.inn), rest = ks.filter(k => !k.inn);
+    h += '<h2>📚 Mis clases</h2>' + (mine.length ? `<div class="grid">${mine.map(cd).join('')}</div>` : '<div class="card empty"><div class="big">📚</div><b>Aún no estás en ninguna clase</b><p>Únete a una de las clases disponibles para empezar a ganar puntos.</p></div>')
+      + '<h2>🔎 Clases disponibles</h2>' + (rest.length ? `<div class="grid">${rest.map(cd).join('')}</div>` : '<div class="card empty"><small>No hay más clases disponibles por ahora.</small></div>');
+  }
+  app.innerHTML = head() + `<main>${h}</main>`;
+}
+const bar = pct => `<div class="bar"><i style="width:${pct}%"></i></div>`;
+const tile = (ic, l, v) => `<div class="stat"><small>${ic} ${l}</small><b>${v}</b></div>`;
+async function hero(){
+  const r = Number(me.role), stu = r == 1;
+  const [A, R, mask, cn, stk, g] = await Promise.all([achs(), rews(), c.unlockedMask(addr), c.getCounters(addr), c.currentStreak(addr), c.todayStats(addr)]);
+  const mine = A.filter(a => !Number(a.role) || Number(a.role) == r), done = mine.filter(a => (mask >> BigInt(a.id)) & 1n).length;
+  const red = await Promise.all(R.map(x => c.redeemed(x.id, addr)));
+  const left = R.filter((x, i) => !red[i]).sort((a, b) => Number(a.cost - b.cost)), nx = left.find(x => me.points < x.cost) || left[0];
+  const tiles = tile('🪙','Puntos', fm(me.points)) + (stu ? tile('🔥','Racha', `${stk} día${stk == 1n ? '' : 's'}`) : tile('✅','Calificadas', cn[3])) + tile('🏆','Logros', `${done}/${mine.length}`) + (stu ? tile('📤','Entregas', cn[0]) : tile('🎁','Canjes', cn[7]));
+  const goal = nx ? `<div class="card"><div class="row"><b>🎯 Próxima recompensa: ${ri(nx.id)} ${esc(nx.name)}</b><span style="text-align:right"><small>${fm(me.points)} / ${fm(nx.cost)} pts</small></span></div>${bar(Math.min(100, Number(me.points * 100n / nx.cost)))}</div>` : '';
+  return `<section class="hero"><div style="position:relative;z-index:1"><h1>¡Hola, ${esc(me.username)}! 👋</h1><p>${stu ? 'Entrega actividades, usa el asistente cada día y suma puntos.' : 'Gestiona tus clases y califica para ganar puntos.'}</p></div><div class="stats">${tiles}</div></section>${goal}`;
+}
+async function shop(){
+  const R = await rews(), red = await Promise.all(R.map(x => c.redeemed(x.id, addr)));
+  let h = `<section class="hero"><div style="position:relative;z-index:1"><h1>🎁 Recompensas</h1><p>Canjea tus puntos por premios. Cada recompensa se canjea una sola vez por cuenta.</p></div><div class="stats">${tile('🪙','Tus puntos', fm(me.points))}</div></section><div class="grid">`;
+  R.forEach((r, i) => {
+    const can = me.points >= r.cost;
+    h += `<div class="card rw" style="border-top-color:${COL[r.id % 5]}"><div class="big">${ri(r.id)}</div><b>${esc(r.name)}</b><p><span class="chip y">🪙 ${fm(r.cost)} pts</span></p>` + (red[i]
+      ? '<p><span class="chip g">✓ Canjeada</span></p><button disabled>Ya canjeada</button>'
+      : `${bar(Math.min(100, Number(me.points * 100n / r.cost)))}<p><small>${can ? '¡Ya puedes canjearla!' : 'Te faltan ' + fm(r.cost - me.points) + ' pts'}</small></p><button ${can ? '' : 'disabled'} onclick="redeem(${r.id})">Canjear</button>`) + '</div>';
+  });
+  return h + '</div>';
+}
+async function redeem(id){
+  const r = (await rews())[id];
+  if(!confirm(`¿Canjear «${r.name}» por ${fm(r.cost)} pts?`)) return;
+  await tx(c.redeem(id), `¡Recompensa canjeada!<br><small>${esc(r.name)}</small>`);
+}
+async function achPage(){
+  const r = Number(me.role), [A, mask, cn, stk] = await Promise.all([achs(), c.unlockedMask(addr), c.getCounters(addr), c.currentStreak(addr)]);
+  const mine = A.filter(a => !Number(a.role) || Number(a.role) == r), on = a => Boolean((mask >> BigInt(a.id)) & 1n), done = mine.filter(on).length;
+  let h = `<section class="hero"><div style="position:relative;z-index:1"><h1>🏆 Logros</h1><p>Cada logro que desbloqueas te da puntos extra.</p></div><div class="stats">${tile('🏆','Desbloqueados', `${done}/${mine.length}`)}${r == 1 ? tile('🔥','Racha actual', `${stk} día${stk == 1n ? '' : 's'}`) : ''}</div></section>`;
+  if(r == 1) h += '<div class="card"><b>🔥 Racha diaria con el asistente</b><p><small>Usa el asistente cada día seguido: desde el 2.º día ganas 20 pts × los días de racha (máximo 10 días = 200 pts por día). Si te saltas un día, vuelve a empezar.</small></p></div>';
+  return h + '<div class="grid">' + mine.map(a => { const v = cn[Number(a.metric)], o = on(a);
+    return `<div class="card ac${o ? ' ok' : ''}"><div style="font-size:34px">${o ? '🏆' : MI[Number(a.metric)]}</div><b>${esc(a.name)}</b><p><small>${esc(a.desc)}</small></p>${bar(o ? 100 : Math.min(100, Number(v * 100n / a.target)))}<p><small>${o ? '¡Desbloqueado!' : v + ' / ' + a.target}</small> <span class="chip y">+${fm(a.bonus)} pts</span></p></div>`; }).join('') + '</div>';
+}
+
+async function teacher(){
+  const [g] = await c.todayStats(addr);
+  let h = await hero();
+  h += `<section class="card"><b>Nueva clase</b><div class="row"><input id="cn" placeholder="Nombre de la clase"><button onclick="tx(c.createCourse($('#cn').value))">Crear</button></div><small>Calificaciones con puntos hoy: ${g}/5</small></section>`;
+  const acts = await all('activityCount','activities');
+  const mineC = (await all('courseCount','courses')).filter(k => k.teacher.toLowerCase() == addr.toLowerCase());
+  if(!mineC.length) h += '<div class="card empty"><div class="big">🏫</div><b>Crea tu primera clase</b><p>Escribe un nombre arriba y pulsa «Crear» para empezar.</p></div>';
+  for(const k of mineC){
+    const st = []; for(const s of await c.getStudents(k.id)) if(Number((await c.users(s)).role)) st.push(s); let rows = '';
+    for(const a of acts.filter(a => a.courseId == k.id)){
+      rows += `<h3>${esc(a.title)} <small>${esc(a.kind)} · hasta ${a.points} pts · ${Number(a.deadline) ? 'Límite: ' + fmt(a.deadline) : 'Sin fecha límite'}</small> ${fileLink(a.file)} <button class="ghost" onclick="editAct(${a.id})">Editar</button></h3>`;
+      for(const s of st){
+        const m = await c.submissions(a.id, s), u = await c.users(s);
+        rows += `<div class="row"><span><b>${esc(u.username)}</b>: ${m.done ? esc(m.content) + ' ' + fileLink(m.file) : '<small>Pendiente</small>'}</span>${m.done ? (m.graded ? `<b>${m.grade}/100 · +${Math.floor(Number(a.points) * Number(m.grade) / 100)} pts</b>` : `<button onclick="mark(${a.id},'${s}')">Calificar</button>`) : ''}<button class="ghost" onclick="thread(${a.id},'${s}')">Mensajes</button></div>`;
+      }
+    }
+    h += `<section class="card" style="border-top-color:${COL[k.id%5]}"><h2>${esc(k.name)}</h2><small>${st.length} estudiantes</small>${rows}
+      <div class="row"><input id="t${k.id}" placeholder="Título"><select id="y${k.id}"><option>Tarea<option>Taller<option>Ejercicio</select>
+      <input id="p${k.id}" type="number" placeholder="Puntos"><button onclick="newAct(${k.id})">Publicar</button></div></section>`;
+  }
+  app.innerHTML = head() + `<main>${h}</main>`;
+}
+/* ===== Formularios, archivos, fechas y mensajes ===== */
+const fmt = t => Number(t) ? new Date(Number(t)*1000).toLocaleString() : 'Sin fecha límite';
+const late = t => Number(t) && Date.now()/1000 > Number(t);
+const toLocal = t => { if(!Number(t)) return ''; const d = new Date(Number(t)*1000); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
+// Lo guardado en la red no es de confianza: solo se enlazan URLs http(s).
+const fileLink = f => { const [u, ...n] = String(f||'').split('|'); return /^https?:\/\//i.test(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener">📎 ${esc(n.join('|') || 'Archivo')}</a>` : ''; };
+async function upload(f){
+  const fd = new FormData(); fd.append('file', f);
+  const r = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {method:'POST', headers:{Authorization:'Bearer ' + PINATA_JWT}, body:fd});
+  if(!r.ok) throw new Error('No se pudo subir el archivo (' + r.status + ')');
+  return 'https://gateway.pinata.cloud/ipfs/' + (await r.json()).IpfsHash + '|' + f.name.replace(/\|/g, '-');
+}
+// Formulario en ventana. fs: [{id,label,t:'text'|'area'|'datetime-local'|'file',v,cur}]. Devuelve {id:valor} o null.
+function ask(title, fs){
+  return new Promise(res => {
+    const d = $('#dlg');
+    d.innerHTML = `<h3>${esc(title)}</h3>` + fs.map(f => `<label><small>${esc(f.label)}</small>` + (f.t == 'area' ? `<textarea id="f_${f.id}" rows="4">${esc(f.v||'')}</textarea>`
+      : f.t == 'file' ? (PINATA_JWT ? `<input id="f_${f.id}" type="file">` : `<input id="f_${f.id}" type="url" placeholder="Pega un enlace al archivo (Drive, Dropbox…)">`)
+      : `<input id="f_${f.id}" type="${f.t||'text'}" value="${esc(f.v||'')}">`) + (f.t == 'file' && f.cur ? `<small>Actual: ${fileLink(f.cur)} · déjalo vacío para conservarlo</small>` : '') + '</label>').join('') +
+      `<p id="dErr" class="err"></p><div class="row"><button id="dOk">Guardar</button><button class="ghost" id="dNo">Cancelar</button></div>`;
+    d.onclose = () => res(null); d.showModal();
+    $('#dNo').onclick = () => d.close();
+    $('#dOk').onclick = async () => {
+      $('#dOk').disabled = true; const o = {};
+      try{
+        for(const f of fs){
+          const el = $('#f_' + f.id);
+          if(f.t == 'file'){
+            let v = f.cur || '';
+            if(PINATA_JWT && el.files[0]){ if(el.files[0].size > 10*1048576) throw new Error('El archivo supera 10 MB'); v = await upload(el.files[0]); }
+            else if(!PINATA_JWT && el.value.trim()) v = el.value.trim() + '|Enlace';
+            o[f.id] = v;
+          } else o[f.id] = f.t == 'datetime-local' ? (el.value ? Math.floor(new Date(el.value).getTime()/1000) : 0) : el.value;
+        }
+      }catch(e){ $('#dErr').textContent = e.message; $('#dOk').disabled = false; return; }
+      d.onclose = null; d.close(); res(o);
+    };
+  });
+}
+async function newAct(k){
+  const t = $('#t'+k).value.trim(); if(!t) return alert('Escribe un título');
+  const v = await ask('Publicar: ' + t, [{id:'d', label:'Fecha límite (opcional)', t:'datetime-local'}, {id:'f', label:'Guía o archivo (opcional)', t:'file'}]); if(!v) return;
+  tx(c.createActivity(k, t, $('#y'+k).value, $('#p'+k).value || 0, v.d, v.f));
+}
+async function editAct(id){
+  const a = await c.activities(id);
+  const v = await ask('Editar actividad', [{id:'t', label:'Título', v:a.title}, {id:'d', label:'Fecha límite', t:'datetime-local', v:toLocal(a.deadline)}, {id:'f', label:'Guía o archivo', t:'file', cur:a.file}]); if(!v) return;
+  if(!v.t.trim()) return alert('El título no puede estar vacío');
+  tx(c.editActivity(id, v.t.trim(), v.d, v.f));
+}
+async function send(id, edit){
+  const s = edit ? await c.submissions(id, addr) : null;
+  const v = await ask(edit ? 'Editar entrega' : 'Entregar', [{id:'c', label:'Tu respuesta', t:'area', v:s?.content}, {id:'f', label:'Archivo (opcional)', t:'file', cur:s?.file}]); if(!v) return;
+  if(!v.c.trim() && !v.f) return alert('Escribe una respuesta o adjunta un archivo');
+  tx(edit ? c.editSubmission(id, v.c, v.f) : c.submit(id, v.c, v.f));
+}
+async function thread(id, st){
+  const d = $('#dlg'), a = await c.activities(id), ms = await c.getMessages(id, st);
+  let h = `<h3>Mensajes · ${esc(a.title)}</h3><small>Conversación entre el profesor y este estudiante.</small>`;
+  for(const m of ms){ const mine = m.sender.toLowerCase() == addr.toLowerCase();
+    h += `<div class="msg ${mine ? 'me' : ''}"><b>${mine ? 'Tú' : esc((await c.users(m.sender)).username)}</b> <small>${fmt(m.time)}</small><br>${esc(m.text)}</div>`; }
+  d.innerHTML = h + (ms.length ? '' : '<p><small>Aún no hay mensajes.</small></p>') + `<textarea id="mt" rows="3" placeholder="Escribe un mensaje…"></textarea><div class="row"><button id="mOk">Enviar</button><button class="ghost" onclick="$('#dlg').close()">Cerrar</button></div>`;
+  d.onclose = null; if(!d.open) d.showModal();
+  $('#mOk').onclick = async () => { const t = $('#mt').value.trim(); if(!t) return; $('#mOk').disabled = true; await tx(c.postMessage(id, st, t)); thread(id, st); };
+}
+async function mark(a, s){
+  const n = prompt('Nota de 0 a 100'); if(n === null) return;
+  const g = Number(n); if(n.trim() === '' || !Number.isInteger(g) || g < 0 || g > 100) return alert('Escribe una nota entera entre 0 y 100');
+  const act = await c.activities(a);
+  if(confirm(`Calificar con ${g}/100. El estudiante recibirá ${Math.floor(Number(act.points) * g / 100)} pts. ¿Confirmar?`)) tx(c.grade(a, s, g));
+}
+
+const isT = () => Number(me.role) == 2;
+async function stats(){
+  if(isT()) return $('#cnt').textContent = 'Modo profesor: sin límite diario';
+  const [[e, q], k] = await Promise.all([c.todayStats(addr), c.currentStreak(addr)]); $('#cnt').textContent = `Hoy: ejercicios ${e}/3 · quiz ${q}/1 · 🔥 racha de ${k} día${k == 1n ? '' : 's'}`;
+}
+/* ===== Asistente IA con archivos adjuntos ===== */
+let aiFiles = [];
+const rd = (f, b64) => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(b64 ? r.result.split(',')[1] : r.result); r.onerror = () => no(new Error('No se pudo leer ' + f.name)); b64 ? r.readAsDataURL(f) : r.readAsText(f); });
+const renderFiles = () => $('#files').innerHTML = aiFiles.map((f, i) => `<button class="ghost" onclick="aiFiles.splice(${i},1);renderFiles()">${esc(f.name)} ✕</button>`).join('');
+$('#af').onchange = e => { aiFiles.push(...[...e.target.files].slice(0, 4 - aiFiles.length)); e.target.value = ''; renderFiles(); };
+function aiReset(){ aiFiles = []; renderFiles(); delete $('#out').dataset.used; }
+// Lee los adjuntos: texto/código como texto, el resto (imágenes, PDF…) en base64.
+async function readFiles(){
+  const out = [];
+  for(const f of aiFiles){
+    if(f.size > 5*1048576) throw new Error(f.name + ' supera 5 MB');
+    const txt = f.type.startsWith('text/') || /\.(txt|md|csv|json|js|py|java|c|cpp|html|css|sql)$/i.test(f.name);
+    out.push(txt ? {name:f.name, type:f.type || 'text/plain', text:(await rd(f)).slice(0, 100000)} : {name:f.name, type:f.type || 'application/octet-stream', data:await rd(f, 1)});
+  }
+  return out;
+}
+function aiToggle(){
+  $('#ai').classList.toggle('open'); stats();
+  const o = $('#out'); if(o.dataset.used != '1') o.textContent = isT()
+    ? 'Pide ejercicios y quizzes para tus clases, y adjunta archivos si quieres. Como profesor no hay límite diario ni puntos por usar el asistente.'
+    : 'Máximo 3 ejercicios y 1 quiz por día. Puedes adjuntar archivos. Ganas puntos al completarlos, sin importar el resultado. Úsalo cada día para mantener tu racha y ganar puntos extra.';
+}
+async function ai(kind){
+  const quiz = kind == 'quiz', t = $('#topic').value || 'el tema de la clase', fn = quiz ? 'aiQuiz' : 'aiExercise', teach = isT();
+  if(!teach) try{ await c[fn].staticCall(); }catch(e){ return alert(e.reason || 'Llegaste al límite diario'); }
+  const q = teach
+    ? (quiz ? `Crea un quiz de 5 preguntas de opción múltiple, con respuestas, para aplicar a mis estudiantes sobre: ${t}` : `Propón un ejercicio práctico, con solución, para plantear a mis estudiantes sobre: ${t}`)
+    : (quiz ? `Crea un quiz de 5 preguntas de opción múltiple sobre: ${t}` : `Propón un ejercicio práctico sobre: ${t}`);
+  let files; try{ files = await readFiles(); }catch(e){ return alert(e.message); }
+  $('#out').dataset.used = '1'; $('#out').textContent = 'Pensando…';
+  let r = '[Modo demo] ' + q + (files.length ? '\n📎 Archivos adjuntos: ' + files.map(f => f.name).join(', ') : '');
+  if(AI_ENDPOINT) try{
+    const res = await fetch(AI_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:q, files})});
+    r = (await res.json()).text;
+  }catch(e){ return $('#out').textContent = '⚠️ No se pudo obtener respuesta del asistente: ' + e.message; }
+  $('#out').textContent = r; aiFiles = []; renderFiles();
+  if(!teach){ await tx(c[fn]()); stats(); }
+}
+
+/* Al recargar, si hay sesión guardada se entra directo al inicio */
+(() => {
+  if(!ethers.isAddress(CONTRACT)) return app.innerHTML = '<main><section class="card"><h2>Falta la dirección del contrato</h2><p>Despliega el nuevo <b>UniRewards.sol</b> en Remix y pega su dirección en <code>const CONTRACT</code> de este archivo.</p></section></main>';
+  const a = accs().find(a => a.addr == LS.getItem(K_SES)); a ? start(a).catch(() => auth()) : auth(); })();
+</script>
+</body>
+</html>
